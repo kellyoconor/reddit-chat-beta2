@@ -123,6 +123,7 @@ async function getRedditPosts(timeframe = 'week', sortBy = 'hot', limit = 50) {
          });
          
          // Save posts to database for historical tracking
+         console.log(`📁 Saving ${processedPosts.length} posts to database...`);
          processedPosts.forEach(post => {
              savePostToDatabase(post);
          });
@@ -184,12 +185,16 @@ function getUrgencyLevel(title, content, score, comments) {
 
 // Database functions for historical tracking
 function savePostToDatabase(post) {
+    console.log('💾 Saving post to database:', post.id, post.title?.substring(0, 50));
+    
     const keywords = extractKeywords(post.title, post.content);
     
     const stmt = db.prepare(`INSERT OR REPLACE INTO posts 
         (id, title, content, score, upvote_ratio, comments, author, created_utc, created_iso, 
          url, flair, is_problem_report, sentiment, urgency_level, keywords) 
         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+    
+    const createdUtc = new Date(post.created).getTime() / 1000;
     
     stmt.run([
         post.id,
@@ -199,7 +204,7 @@ function savePostToDatabase(post) {
         post.upvoteRatio,
         post.comments,
         post.author,
-        new Date(post.created).getTime() / 1000,
+        createdUtc,
         post.created,
         post.url,
         post.flair,
@@ -208,8 +213,10 @@ function savePostToDatabase(post) {
         post.urgencyLevel,
         keywords.join(',')
     ], (err) => {
-        if (err && !err.message.includes('UNIQUE constraint failed')) {
-            console.error('Error saving post:', err);
+        if (err) {
+            console.error('❌ Error saving post:', post.id, err.message);
+        } else {
+            console.log('✅ Saved post:', post.id);
         }
     });
     
