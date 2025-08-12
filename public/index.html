@@ -123,11 +123,42 @@
             padding: 20px 24px;
             border-radius: 20px;
             font-size: 15px;
-            line-height: 1.6;
+            line-height: 1.7;
             font-weight: 400;
             word-wrap: break-word;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
             border: 1px solid rgba(0, 0, 0, 0.06);
+        }
+
+        .message-content h1, .message-content h2, .message-content h3 {
+            margin: 16px 0 12px 0;
+            color: inherit;
+            font-weight: 600;
+        }
+
+        .message-content h2 {
+            font-size: 18px;
+            border-bottom: 2px solid rgba(0, 0, 0, 0.1);
+            padding-bottom: 8px;
+            margin-bottom: 16px;
+        }
+
+        .message-content ul, .message-content ol {
+            margin: 12px 0;
+            padding-left: 20px;
+        }
+
+        .message-content li {
+            margin: 8px 0;
+        }
+
+        .message-content strong {
+            font-weight: 600;
+            color: inherit;
+        }
+
+        .message-content p {
+            margin: 12px 0;
         }
 
         .message.user .message-content {
@@ -684,11 +715,24 @@
                     </div>
                 `;
             } else {
-                // Handle content formatting
+                // Handle content formatting with markdown support
                 let formattedContent = content
+                    // Convert markdown headers
+                    .replace(/^## (.*$)/gm, '<h2>$1</h2>')
+                    .replace(/^### (.*$)/gm, '<h3>$1</h3>')
+                    // Convert bold text
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                    // Convert links
                     .replace(/(https?:\/\/[^\s\)]+)/g, '<a href="$1" target="_blank">$1</a>')
-                    .replace(/\n\n+/g, '<br><br>')
+                    // Convert line breaks
+                    .replace(/\n\n+/g, '</p><p>')
                     .replace(/\n/g, '<br>')
+                    // Wrap in paragraphs
+                    .replace(/^/, '<p>')
+                    .replace(/$/, '</p>')
+                    // Clean up empty paragraphs
+                    .replace(/<p><\/p>/g, '')
+                    .replace(/<p><br><\/p>/g, '')
                     .trim();
                 
                 // Add source tag if content includes source info

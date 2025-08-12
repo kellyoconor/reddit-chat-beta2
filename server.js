@@ -354,26 +354,34 @@ USER QUERY: "${req.body.message}"
 
 POSTS DATA: ${JSON.stringify(posts.slice(0, 25))}
 
-Provide executive-level analysis with:
+Provide a clear, easy-to-read analysis with:
 
-📊 BUSINESS IMPACT ASSESSMENT:
-1. Identify the TOP 3 themes that pose the highest business risk
-2. For each theme: Impact level (Critical/High/Medium), customer volume affected, potential revenue impact
-3. Immediate action items for executives
+## 📊 QUICK SUMMARY
+- **Total Posts Analyzed:** ${posts.length}
+- **Main Issues:** List the top 3 customer concerns
+- **Sentiment:** Overall customer mood (positive/negative/neutral)
 
-📈 TREND ANALYSIS:
-- Are these recurring issues or new problems?
-- Volume/sentiment trends
-- Correlation with business metrics
+## 🔥 TOP ISSUES FOUND
+1. **[Issue Name]** - Brief description
+   - How many customers affected
+   - Sample customer quote
+   
+2. **[Issue Name]** - Brief description  
+   - How many customers affected
+   - Sample customer quote
 
-🎯 RECOMMENDATIONS:
-- Specific departments that need attention
-- Process improvements
-- Customer communication strategies
+3. **[Issue Name]** - Brief description
+   - How many customers affected  
+   - Sample customer quote
 
-Format with clear sections, bullet points, and include direct post links as evidence.`;
+## 💡 KEY INSIGHTS
+- What this means for customers
+- Any patterns or trends noticed
+- Recommendations in simple terms
+
+Use clear headings, bullet points, and keep responses concise and scannable. Focus on being helpful and informative rather than overly technical.`;
         } else {
-            prompt = `You are a customer experience analyst providing detailed insights about Comcast Xfinity customer feedback.
+            prompt = `You are a helpful customer feedback analyst. Provide clear, easy-to-read insights about r/Comcast_Xfinity customer feedback.
 
 CONTEXT: Analyzing ${posts.length} recent posts from r/Comcast_Xfinity
 QUERY: "${req.body.message}"
