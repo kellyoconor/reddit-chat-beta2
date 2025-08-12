@@ -192,7 +192,7 @@
 
         .suggestion-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
             gap: 12px;
             margin-top: 16px;
         }
@@ -215,6 +215,19 @@
             transform: translateY(-2px);
             box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
             border-color: transparent;
+        }
+
+        .suggestion-card.pm-mode {
+            background: linear-gradient(135deg, #f39f86 0%, #f093fb 100%);
+            color: white;
+            font-weight: 600;
+            border: 2px solid transparent;
+        }
+
+        .suggestion-card.pm-mode:hover {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 32px rgba(255, 107, 107, 0.4);
         }
 
         .input-area {
@@ -601,8 +614,16 @@
             <h1>r/Comcast_Xfinity</h1>
             <p>AI-powered analysis of r/Comcast_Xfinity subreddit feedback</p>
             
-            <!-- Analytics Controls -->
+            <!-- Mode Toggle and Analytics Controls -->
             <div class="analytics-controls">
+                <div class="control-group">
+                    <label for="analysisMode">Analysis Mode:</label>
+                    <select id="analysisMode" class="control-select">
+                        <option value="standard">🔍 Standard Analysis</option>
+                        <option value="pm">🚀 Product Manager Mode</option>
+                    </select>
+                </div>
+                
                 <div class="control-group">
                     <label for="timeRange">Time Period:</label>
                     <select id="timeRange" class="control-select">
@@ -648,12 +669,14 @@
                 <div class="message-avatar">✨</div>
                 <div class="message-content">
                     <div class="welcome-card">
-                        <div class="welcome-text">Welcome to r/Comcast_Xfinity. I analyze customer feedback from r/Comcast_Xfinity to help you understand what customers are saying.</div>
+                        <div class="welcome-text" id="welcomeText">Welcome to r/Comcast_Xfinity. I analyze customer feedback from r/Comcast_Xfinity to help you understand what customers are saying.</div>
                         <div class="suggestion-grid">
                             <div class="suggestion-card" onclick="setInputValue(this.textContent)">What are the top themes this week?</div>
                             <div class="suggestion-card" onclick="setInputValue(this.textContent)">Show me billing complaints</div>
-                            <div class="suggestion-card" onclick="setInputValue(this.textContent)">Any service outage reports?</div>
-                            <div class="suggestion-card" onclick="setInputValue(this.textContent)">Customer service feedback</div>
+                            <div class="suggestion-card pm-mode" onclick="setInputValue(this.textContent)">🚀 What product opportunities do you see?</div>
+                            <div class="suggestion-card pm-mode" onclick="setInputValue(this.textContent)">💡 What gaps and unmet needs exist?</div>
+                            <div class="suggestion-card pm-mode" onclick="setInputValue(this.textContent)">🔍 What solutions don't exist but should?</div>
+                            <div class="suggestion-card pm-mode" onclick="setInputValue(this.textContent)">⚡ What if we reimagined how this works?</div>
                         </div>
                     </div>
                 </div>
@@ -765,11 +788,19 @@
             chatInput.disabled = true;
             sendButton.disabled = true;
             
+            // Check current mode and modify message if in PM mode
+            const analysisMode = document.getElementById('analysisMode').value;
+            let finalMessage = message;
+            
+            if (analysisMode === 'pm' && !isAlreadyPMQuery(message)) {
+                finalMessage = `PM Mode: ${message}`;
+            }
+            
             try {
                 const response = await fetch('/api/chat', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ message }),
+                    body: JSON.stringify({ message: finalMessage }),
                 });
                 
                 const data = await response.json();
@@ -792,6 +823,11 @@
             }
         }
 
+        function isAlreadyPMQuery(message) {
+            const pmKeywords = ['opportunities', 'product manager', 'pm mode', 'gaps', 'unmet needs', 'what if', 'hypothesis'];
+            return pmKeywords.some(keyword => message.toLowerCase().includes(keyword));
+        }
+
         chatForm.addEventListener('submit', (e) => {
             e.preventDefault();
             const message = chatInput.value.trim();
@@ -802,6 +838,43 @@
         });
 
         chatInput.focus();
+
+        // Mode switching functionality
+        const analysisMode = document.getElementById('analysisMode');
+        const suggestionGrid = document.querySelector('.suggestion-grid');
+        
+        const standardSuggestions = [
+            'What are the top themes this week?',
+            'Show me billing complaints',
+            'Any service outage reports?',
+            'Customer service feedback'
+        ];
+        
+        const pmSuggestions = [
+            '🚀 What product opportunities do you see?',
+            '💡 What gaps and unmet needs exist?',
+            '🔍 What solutions don\'t exist but should?',
+            '⚡ What if we reimagined how this works?'
+        ];
+        
+        function updateSuggestionCards() {
+            const currentMode = analysisMode.value;
+            const suggestions = currentMode === 'pm' ? pmSuggestions : standardSuggestions;
+            const welcomeText = document.getElementById('welcomeText');
+            
+            // Update welcome message based on mode
+            if (currentMode === 'pm') {
+                welcomeText.textContent = 'Welcome to r/Comcast_Xfinity Product Intelligence. I transform customer feedback into breakthrough product opportunities and strategic insights for innovation.';
+            } else {
+                welcomeText.textContent = 'Welcome to r/Comcast_Xfinity. I analyze customer feedback from r/Comcast_Xfinity to help you understand what customers are saying.';
+            }
+            
+            suggestionGrid.innerHTML = suggestions.map(suggestion => 
+                `<div class="suggestion-card ${currentMode === 'pm' ? 'pm-mode' : ''}" onclick="setInputValue(this.textContent)">${suggestion}</div>`
+            ).join('');
+        }
+        
+        analysisMode.addEventListener('change', updateSuggestionCards);
 
         // Analytics functionality
         const showAnalyticsBtn = document.getElementById('showAnalytics');

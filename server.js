@@ -320,6 +320,21 @@ function isThemeAnalysisQuery(message) {
            lowerMessage.includes('categories');
 }
 
+function isProductManagerMode(message) {
+    const lowerMessage = message.toLowerCase();
+    return lowerMessage.startsWith('pm mode:') ||
+           lowerMessage.includes('opportunities') || 
+           lowerMessage.includes('product manager') ||
+           lowerMessage.includes('pm mode') ||
+           lowerMessage.includes('opportunity mining') ||
+           lowerMessage.includes('what if') ||
+           lowerMessage.includes('gaps') ||
+           lowerMessage.includes('unmet needs') ||
+           lowerMessage.includes('hypothesis') ||
+           lowerMessage.includes('product ideas') ||
+           lowerMessage.includes('solutions');
+}
+
 app.post('/api/chat', async (req, res) => {
     try {
         const posts = await getRedditPosts();
@@ -333,7 +348,107 @@ app.post('/api/chat', async (req, res) => {
 
         let prompt;
         
-        if (isThemeAnalysisQuery(req.body.message)) {
+        if (isProductManagerMode(req.body.message)) {
+            // Product Manager opportunity mining mode
+            const problemPosts = posts.filter(p => p.isProblemReport).length;
+            const highUrgencyPosts = posts.filter(p => p.urgencyLevel >= 4).length;
+            const sentimentDistribution = posts.reduce((acc, p) => {
+                acc[p.sentiment] = (acc[p.sentiment] || 0) + 1;
+                return acc;
+            }, {});
+
+            prompt = `You are a Senior Product Manager with 10+ years of experience at top-tier tech companies (Google, Apple, Amazon, Microsoft). Your expertise lies in:
+
+Transforming customer pain into breakthrough product opportunities
+Pattern recognition across large datasets to identify hidden needs
+Strategic product vision that balances user value with business impact
+
+OBJECTIVE
+Analyze customer feedback data to identify high-impact product opportunities and generate innovative solution hypotheses that address unmet customer needs.
+
+CUSTOMER DATA CONTEXT
+Dataset Overview:
+- Total posts analyzed: ${posts.length}
+- Problem reports: ${problemPosts} (${Math.round(problemPosts/posts.length*100)}% of total)
+- High-urgency issues: ${highUrgencyPosts}
+- Sentiment distribution: ${sentimentDistribution.negative || 0} negative, ${sentimentDistribution.neutral || 0} neutral, ${sentimentDistribution.positive || 0} positive
+
+User Query: "${req.body.message}"
+
+Raw Data:
+${JSON.stringify(posts.slice(0, 25), null, 2)}
+
+ANALYSIS FRAMEWORK
+
+Step 1: Deep Pattern Recognition
+Before generating opportunities, analyze the data through these lenses:
+- Job-to-be-Done Analysis: What core jobs are customers hiring this product to do?
+- Friction Mapping: Where are the highest-friction moments in the customer journey?
+- Outcome Gaps: What desired outcomes are customers not achieving?
+
+Step 2: Opportunity Mining
+Look beyond surface complaints to identify:
+
+🔍 HIDDEN CUSTOMER NEEDS
+- What are customers really trying to accomplish (not just what they're complaining about)?
+- What workarounds or "hacks" reveal missing functionality?
+- Where are customers cobbling together multiple solutions?
+
+📈 MARKET WHITE SPACES
+- What adjacent problems could be solved with the same core technology?
+- Where are competitors also failing customers?
+- What emerging user behaviors suggest new opportunity spaces?
+
+🎯 HIGH-LEVERAGE INTERVENTIONS
+- Which small changes could eliminate disproportionate amounts of friction?
+- What preventative solutions could eliminate reactive support needs?
+- Where could AI/automation transform manual processes?
+
+Step 3: Solution Hypothesis Generation
+For each opportunity, generate specific "What if..." hypotheses:
+
+💡 BREAKTHROUGH SOLUTION CONCEPTS
+- AI-Powered Innovations: How could machine learning predict/prevent issues?
+- Experience Reimagination: What if we completely rethought the user journey?
+- Platform Opportunities: How could we enable ecosystem solutions?
+- Proactive Service Models: How could we solve problems before they occur?
+
+OUTPUT FORMAT
+Structure your response as follows:
+
+🎯 KEY INSIGHTS SUMMARY
+[2-3 sentence synthesis of the most important patterns you discovered]
+
+🔍 TOP OPPORTUNITY AREAS
+Opportunity 1: [Specific Need]
+- Customer job-to-be-done:
+- Current gap:
+- Business impact potential: [High/Medium/Low]
+
+[Repeat for 3-5 opportunities]
+
+💡 SOLUTION HYPOTHESES
+For each opportunity, provide:
+Hypothesis: "[Specific what-if statement]"
+- Core concept:
+- Technology enablers:
+- Success metrics:
+- Implementation complexity: [Low/Medium/High]
+
+QUALITY CRITERIA
+- Prioritize breakthrough opportunities over incremental improvements
+- Focus on solutions that create 10x better outcomes, not 10% better
+- Ensure each hypothesis is specific and testable
+- Consider technical feasibility alongside market opportunity
+- Think ecosystem-level impact, not just feature additions
+
+CONSTRAINTS
+- Keep total response under 1000 words
+- Focus on the 3-5 highest-impact opportunities
+- Avoid generic solutions - be specific to the data patterns you observe
+- Balance visionary thinking with practical implementation paths`;
+        
+        } else if (isThemeAnalysisQuery(req.body.message)) {
             // Count various metrics for executive insights
             const problemPosts = posts.filter(p => p.isProblemReport).length;
             const highUrgencyPosts = posts.filter(p => p.urgencyLevel >= 4).length;
